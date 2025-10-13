@@ -1,0 +1,10 @@
+project_id = "fembyziwlwbnfxwaodrg"
+
+[functions.initiate-transaction]
+verify_jwt = true
+
+[functions.verify-transaction]
+verify_jwt = true
+
+[functions.calculate-interest]
+verify_jwt = false
