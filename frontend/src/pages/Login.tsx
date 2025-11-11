@@ -1,111 +1,126 @@
-import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { DollarSign, Loader2 } from "lucide-react";
-import { Session } from "@supabase/supabase-js";
+import { Label } from "@/components/ui/label";
+import { TrendingUp, Mail, Lock } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { OTPVerification } from "@/components/OTPVerification";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
   const [loading, setLoading] = useState(false);
-  const [session, setSession] = useState<Session | null>(null);
+  const [showOTP, setShowOTP] = useState(false);
+  const { signIn, user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
-      if (session) {
-        navigate("/dashboard");
-      }
-    });
+  // Redirect if already logged in
+  if (user && !showOTP) {
+    navigate("/dashboard");
+  }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) {
-        navigate("/dashboard");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    setLoading(false);
-
-    if (error) {
-      toast({
-        title: "Login Failed",
-        description: error.message,
-        variant: "destructive",
-      });
+    try {
+      // First show OTP verification
+      setShowOTP(true);
+    } catch (error) {
+      // Error handled
+    } finally {
+      setLoading(false);
     }
   };
 
+  const handleOTPVerified = async () => {
+    try {
+      // After OTP is verified, sign in
+      await signIn(formData.email, formData.password);
+    } catch (error) {
+      setShowOTP(false);
+    }
+  };
+
+  if (showOTP) {
+    return (
+      <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
+        <OTPVerification
+          email={formData.email}
+          type="login"
+          onVerified={handleOTPVerified}
+          onCancel={() => setShowOTP(false)}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-primary p-4">
-      <Card className="w-full max-w-md shadow-elevated">
+    <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-card">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 bg-gradient-primary rounded-full flex items-center justify-center">
-              <DollarSign className="h-10 w-10 text-white" />
+            <div className="h-12 w-12 rounded-lg bg-gradient-secondary flex items-center justify-center">
+              <TrendingUp className="h-6 w-6 text-secondary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
-          <CardDescription>Log in to access your account</CardDescription>
+          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+          <CardDescription>
+            Sign in to access your investment dashboard
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="pl-10"
+                  required
+                />
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link to="/forgot-password" className="text-xs text-secondary hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type="password"
+                  
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="pl-10"
+                  required
+                />
+              </div>
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Logging in...
-                </>
-              ) : (
-                "Log In"
-              )}
+            <Button 
+              type="submit" 
+              className="w-full bg-gradient-secondary shadow-glow"
+              disabled={loading}
+            >
+              {loading ? "Signing In..." : "Sign In"}
             </Button>
           </form>
-          <div className="mt-6 text-center text-sm text-muted-foreground">
+          <div className="mt-6 text-center text-sm">
             Don't have an account?{" "}
-            <Link to="/register" className="text-primary hover:underline font-medium">
-              Register
+            <Link to="/register" className="text-secondary hover:underline font-medium">
+              Sign up
             </Link>
           </div>
         </CardContent>

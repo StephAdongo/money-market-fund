@@ -6,8 +6,6 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "typeRoots": ["./src/types", "/.node_modules/@types"],
-
     "noImplicitAny": false,
     "noUnusedParameters": false,
     "skipLibCheck": true,

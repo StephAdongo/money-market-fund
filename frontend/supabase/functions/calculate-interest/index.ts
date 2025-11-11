@@ -1,85 +1,141 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-serve(async (req) => {
+serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    );
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    console.log("Starting daily interest calculation...");
 
-    // Get all accounts that haven't received interest today
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
+    // Get the current interest rate from admin settings
+    const { data: settingData, error: settingError } = await supabase
+      .from("admin_settings")
+      .select("setting_value")
+      .eq("setting_key", "daily_interest_rate")
+      .maybeSingle();
 
-    const { data: accounts, error } = await supabaseClient
-      .from("accounts")
-      .select("*")
-      .lt("last_interest_date", yesterday.toISOString());
+    if (settingError) {
+      console.error("Error fetching interest rate:", settingError);
+      throw new Error("Failed to fetch interest rate");
+    }
 
-    if (error) {
-      console.error("Error fetching accounts:", error);
+    const dailyRate = settingData ? parseFloat(settingData.setting_value) : 0.05; // Default 0.05%
+    console.log(`Using daily interest rate: ${dailyRate}%`);
+
+    // Get all profiles with positive balances
+    const { data: profiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("id, email, full_name, balance, total_interest_earned")
+      .gt("balance", 0);
+
+    if (profilesError) {
+      console.error("Error fetching profiles:", profilesError);
+      throw new Error("Failed to fetch profiles");
+    }
+
+    if (!profiles || profiles.length === 0) {
+      console.log("No profiles with positive balances found");
       return new Response(
-        JSON.stringify({ error: "Failed to fetch accounts" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ 
+          success: true, 
+          message: "No profiles to process",
+          processed: 0 
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
       );
     }
 
-    let processed = 0;
+    let processedCount = 0;
+    let totalInterestPaid = 0;
 
-    for (const account of accounts || []) {
-      if (account.balance > 0) {
-        const interest = account.balance * account.interest_rate;
-        const newBalance = account.balance + interest;
+    // Process each profile
+    for (const profile of profiles) {
+      const currentBalance = parseFloat(String(profile.balance || "0"));
+      const currentTotalInterest = parseFloat(String(profile.total_interest_earned || "0"));
+      
+      // Calculate interest
+      const interestAmount = currentBalance * (dailyRate / 100);
+      const newBalance = currentBalance + interestAmount;
+      const newTotalInterest = currentTotalInterest + interestAmount;
 
-        // Update account balance and last interest date
-        await supabaseClient
-          .from("accounts")
-          .update({
-            balance: newBalance,
-            last_interest_date: new Date().toISOString(),
-          })
-          .eq("id", account.id);
+      console.log(`Processing ${profile.email}: Balance $${currentBalance}, Interest $${interestAmount.toFixed(2)}`);
 
-        // Create interest transaction
-        await supabaseClient
-          .from("transactions")
-          .insert({
-            user_id: account.user_id,
-            type: "interest",
-            amount: interest,
-            status: "completed",
-            otp_verified: true,
-            balance_after: newBalance,
-          });
+      // Update profile balance and total interest
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          balance: newBalance,
+          total_interest_earned: newTotalInterest,
+        })
+        .eq("id", profile.id);
 
-        processed++;
-        console.log(`Processed interest for account ${account.id}: $${interest.toFixed(2)}`);
+      if (updateError) {
+        console.error(`Error updating profile ${profile.email}:`, updateError);
+        continue;
       }
+
+      // Create interest transaction record
+      const { error: txError } = await supabase
+        .from("transactions")
+        .insert({
+          user_id: profile.id,
+          amount: interestAmount,
+          type: "interest",
+          status: "completed",
+          description: `Daily interest at ${dailyRate}%`,
+        });
+
+      if (txError) {
+        console.error(`Error creating transaction for ${profile.email}:`, txError);
+        continue;
+      }
+
+      processedCount++;
+      totalInterestPaid += interestAmount;
     }
+
+    console.log(`Successfully processed ${processedCount} accounts`);
+    console.log(`Total interest paid: $${totalInterestPaid.toFixed(2)}`);
 
     return new Response(
       JSON.stringify({ 
-        success: true,
-        processed,
-        message: `Calculated interest for ${processed} accounts`
+        success: true, 
+        message: "Interest calculation completed",
+        processed: processedCount,
+        totalInterestPaid: totalInterestPaid.toFixed(2),
+        rate: dailyRate
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
     );
-  } catch (error) {
-    console.error("Error:", error);
+  } catch (error: any) {
+    console.error("Error in calculate-interest function:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ 
+        error: error.message || "Internal server error",
+        success: false 
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
     );
   }
 });
