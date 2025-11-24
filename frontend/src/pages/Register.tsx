@@ -101,7 +101,7 @@ const Register = () => {
                 <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="name"
-                  
+                  placeholder="John Doe"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="pl-10"
@@ -116,7 +116,7 @@ const Register = () => {
                 <Input
                   id="email"
                   type="email"
-                  
+                  placeholder="you@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="pl-10"
@@ -131,7 +131,7 @@ const Register = () => {
                 <Input
                   id="password"
                   type="password"
-                  
+                  placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="pl-10"
@@ -146,7 +146,7 @@ const Register = () => {
                 <Input
                   id="confirmPassword"
                   type="password"
-                  
+                  placeholder="••••••••"
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   className="pl-10"

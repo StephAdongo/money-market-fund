@@ -131,7 +131,7 @@ serve(async (req: Request): Promise<Response> => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "GrowthFund <onboarding@resend.dev>",
+        from: "GrowthFund <noreply@growthfunds.work>",
         to: [email],
         subject,
         html: htmlContent,

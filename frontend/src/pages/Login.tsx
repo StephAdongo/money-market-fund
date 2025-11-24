@@ -81,7 +81,7 @@ const Login = () => {
                 <Input
                   id="email"
                   type="email"
-                
+                  placeholder="you@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="pl-10"
@@ -101,7 +101,7 @@ const Login = () => {
                 <Input
                   id="password"
                   type="password"
-                  
+                  placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="pl-10"

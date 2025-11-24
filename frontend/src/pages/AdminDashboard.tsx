@@ -12,6 +12,7 @@ import { InterestRateConfig } from "@/components/admin/InterestRateConfig";
 import { TransactionMonitoring } from "@/components/admin/TransactionMonitoring";
 import { WithdrawalAnalytics } from "@/components/admin/WithdrawalAnalytics";
 import { ActivityAuditLog } from "@/components/admin/ActivityAuditLog";
+import { OTPMonitoring } from "@/components/admin/OTPMonitoring";
 
 const AdminDashboard = () => {
   const { user, signOut } = useAuth();
@@ -96,11 +97,12 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-6 lg:w-auto">
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="interest">Interest Rate</TabsTrigger>
             <TabsTrigger value="transactions">Transactions</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="otp">OTP Logs</TabsTrigger>
             <TabsTrigger value="audit">Audit Log</TabsTrigger>
           </TabsList>
 
@@ -118,6 +120,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="analytics">
             <WithdrawalAnalytics />
+          </TabsContent>
+
+          <TabsContent value="otp">
+            <OTPMonitoring />
           </TabsContent>
 
           <TabsContent value="audit">

@@ -59,10 +59,10 @@ const Landing = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 text-primary-foreground">
-              Grow Your Wealth with Daily Returns
+              Grow Your Money with Daily Returns
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-primary-foreground/90">
-              Earn consistent daily interest on your investments. Secure, transparent, and designed for growth.
+              Earn consistent daily interest on your investments. Secure, transparent and designed for growth.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/register">
@@ -70,9 +70,7 @@ const Landing = () => {
                   Start Earning Today
                 </Button>
               </Link>
-              <Button size="lg" variant="outline" className="border-2 border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10 text-lg px-8">
-                View Demo
-              </Button>
+              
             </div>
             <div className="mt-12 grid grid-cols-3 gap-8 max-w-2xl mx-auto">
               <div>
@@ -84,7 +82,7 @@ const Landing = () => {
                 <div className="text-sm text-primary-foreground/80">Assets Under Management</div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-accent">50K+</div>
+                <div className="text-3xl font-bold text-accent">10K+</div>
                 <div className="text-sm text-primary-foreground/80">Active Investors</div>
               </div>
             </div>
@@ -98,7 +96,7 @@ const Landing = () => {
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Why Choose GrowthFund?</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Built for modern investors who demand transparency, security, and consistent returns.
+              Built for modern investors who demand transparency, security and consistent returns.
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -121,7 +119,7 @@ const Landing = () => {
                 </div>
                 <CardTitle>Bank-Level Security</CardTitle>
                 <CardDescription>
-                  Your funds are protected with email OTP verification, encrypted storage, and multi-layer authentication.
+                  Your funds are protected with email OTP verification, encrypted storage and multi-layer authentication.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -145,7 +143,7 @@ const Landing = () => {
                 </div>
                 <CardTitle>24/7 Access</CardTitle>
                 <CardDescription>
-                  Monitor your portfolio, track interest, and manage transactions around the clock from any device.
+                  Monitor your portfolio, track interest and manage transactions around the clock from any device.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -255,7 +253,7 @@ const Landing = () => {
                 <CardHeader>
                   <CardTitle className="text-lg">Is my money safe?</CardTitle>
                   <CardDescription>
-                    Yes. We use bank-level encryption, OTP verification for all transactions, and follow industry-leading security practices.
+                    Yes. We use bank-level encryption, OTP verification for all transactions and follow industry-leading security practices.
                   </CardDescription>
                 </CardHeader>
               </Card>
